@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>lycyouxi-恐怖一家</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #0a080c, #030103);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Courier New', 'Monaco', monospace;
+            padding: 20px;
+        }
+
+        .game-wrapper {
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            border: 1px solid #6b4c3a;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,215,170,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            background: #0f0b09e0;
+            padding: 14px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+            border-bottom: 1px solid #734c34;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .stat-card {
+            background: #1e1915;
+            padding: 5px 18px;
+            border-radius: 32px;
+            color: #ebd5b3;
+            letter-spacing: 1px;
+            box-shadow: inset 0 1px 3px #00000033, 0 1px 0 #6f4e38;
+        }
+
+        .stat-card span {
+            color: #ffb57c;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .sanity-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sanity-bar-bg {
+            width: 180px;
+            background: #2e241f;
+            border-radius: 20px;
+            height: 12px;
+            overflow: hidden;
+        }
+        .sanity-fill {
+            background: #b53a1f;
+            height: 100%;
+            width: 100%;
+            transition: width 0.2s;
+            border-radius: 20px;
+        }
+
+        .main-dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            min-height: 540px;
+        }
+
+        .story-area {
+            flex: 2;
+            min-width: 260px;
+            background: #030202b3;
+            padding: 20px;
+            border-right: 1px solid #4f3424;
+            height: 520px;
+            overflow-y: auto;
+            font-size: 15px;
+            line-height: 1.55;
+            color: #f2e2cf;
+        }
+
+        .story-line {
+            margin-bottom: 12px;
+            border-left: 3px solid #bf7b4a;
+            padding-left: 14px;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .story-line.event {
+            color: #ffcd94;
+            text-shadow: 0 0 2px #a1350e;
+            font-weight: 500;
+        }
+
+        .action-panel {
+            flex: 1.2;
+            min-width: 280px;
+            background: #0e0b0ad9;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            overflow-y: auto;
+            max-height: 520px;
+        }
+
+        .cmd-section {
+            background: #1a1512a0;
+            border-radius: 24px;
+            padding: 12px 16px;
+            border: 1px solid #634d3b;
+        }
+
+        .cmd-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #e0aa7a;
+            border-bottom: 1px solid #7a5a43;
+            display: inline-block;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .game-btn {
+            background: #2f241e;
+            border: none;
+            color: #fae1bd;
+            font-family: monospace;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.08s linear;
+            box-shadow: 0 1px 2px black;
+            border-bottom: 1px solid #7a583f;
+        }
+
+        .game-btn:hover {
+            background: #6f4a34;
+            color: white;
+            transform: scale(0.96);
+            border-color: #be8a5c;
+        }
+
+        .game-btn.disabled-btn, .game-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.2);
+            transform: none;
+        }
+
+        .item-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .item-badge {
+            background: #251e1a;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.05s linear;
+            border-left: 3px solid #bb794e;
+        }
+        .item-badge:hover {
+            background: #4a3327;
+            transform: scale(0.96);
+        }
+
+        hr {
+            border-color: #4f3527;
+            margin: 5px 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f1915;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8f6243;
+            border-radius: 8px;
+        }
+
+        @keyframes pulseRed {
+            0% { text-shadow: 0 0 0px #b33; }
+            100% { text-shadow: 0 0 5px #f66; }
+        }
+        .low-sanity {
+            animation: pulseRed 1.2s infinite;
+        }
+    </style>
+</head>
+<body>
+<div class="game-wrapper">
+    <div class="status-bar">
+        <div class="stat-card">🏚️ 位置: <span id="locName">门厅</span></div>
+        <div class="stat-card">⏱️ 时间: <span id="gameTime">第1天 09:00</span></div>
+        <div class="stat-card sanity-container">🧠 理智: <span id="sanityNum">100</span>%
+            <div class="sanity-bar-bg"><div class="sanity-fill" id="sanityFill" style="width:100%"></div></div>
+        </div>
+        <div class="stat-card">🪑 姿态: <span id="posture">站立</span></div>
+    </div>
+    <div class="main-dashboard">
+        <div class="story-area" id="storyArea">
+            <div class="story-line">======================================</div>
+            <div class="story-line">       lycyouxi-恐怖一家</div>
+            <div class="story-line">======================================</div>
+            <div class="story-line">你被困于诅咒老宅，必须集齐【三圣物】（吊坠盒、摇铃、菜刀），</div>
+            <div class="story-line">并完成【三大谜题】，遭遇所有家人，最终在客厅壁炉举行破咒仪式。</div>
+        </div>
+        <div class="action-panel" id="actionPanel"></div>
+    </div>
+</div>
+
+<script>
+    // ---------- 核心状态 (高难度扩展，无手动结局选择) ----------
+    let game = {
+        currentLocation: "entrance_hall",
+        currentPos: "中央",
+        visited: { entrance_hall: true },
+        collected: { old_key: false, kitchen_knife: false, locket: false, rattle: false, diary: false, symbol_chart: false },
+        puzzles: { diary_lock: false, toybox_lock: false, desk_lock: false },
+        interacted: {},
+        sanity: 100,
+        isSitting: false,
+        isLying: false,
+        isSleeping: false,
+        gameOver: false,
+        gameWon: false,
+        metFather: false,
+        metMother: false,
+        metChild: false,
+        knowsSecret: false,       // 是否了解仪式真相（读完日记+书桌文献）
+        ritualPerformed: false,   // 是否已举行仪式（决定结局触发）
+        gameTime: { hour: 9, minute: 0, day: 1 },
+        dayPhase: 0,
+        hasSymbolChart: false,
+        diaryRead: false,
+        deskHintKnown: false,
+        lastActionStamp: Date.now()
+    };
+
+    // ---------- 静态数据 ----------
+    const locationNames = {
+        entrance_hall: "门厅", living_room: "客厅", kitchen: "厨房", upstairs_hall: "二楼走廊",
+        master_bedroom: "主卧室", children_room: "儿童房", bathroom: "浴室", study: "书房"
+    };
+    const locationDesc = {
+        entrance_hall: "昏暗门厅，全家福挂在墙上，前门紧锁。东客厅，北楼梯，西厨房。",
+        living_room: "白布蒙家具，阴森。壁炉冷灰，沙发旁有电视机。东书房。",
+        kitchen: "腥甜气味，水槽脏盘，冰箱虚掩，操作台上有【菜刀】。",
+        upstairs_hall: "墙纸剥落，三扇门。东主卧，西儿童房，北浴室。",
+        master_bedroom: "凌乱双人床，梳妆台，床头柜上有【日记】。",
+        children_room: "诡异玩具，上锁【玩具箱】，小床。",
+        bathroom: "镜子蒙雾，浴缸浑浊，【药柜】半开。",
+        study: "神秘学书籍，【书桌】抽屉锁着，墙上【符号图】。"
+    };
+    const connections = {
+        entrance_hall: { "东": "living_room", "北": "upstairs_hall", "西": "kitchen" },
+        living_room: { "南": "entrance_hall", "东": "study" },
+        kitchen: { "东": "entrance_hall" },
+        upstairs_hall: { "南": "entrance_hall", "东": "master_bedroom", "西": "children_room", "北": "bathroom" },
+        master_bedroom: { "西": "upstairs_hall" },
+        children_room: { "东": "upstairs_hall" },
+        bathroom: { "南": "upstairs_hall" },
+        study: { "西": "living_room" }
+    };
+    const locationItems = {
+        entrance_hall: ["全家福", "小桌子"], living_room: ["电视机", "壁炉", "沙发"], kitchen: ["水槽", "冰箱", "菜刀", "操作台"],
+        upstairs_hall: ["墙纸", "小柜子"], master_bedroom: ["床", "梳妆台", "日记", "床头柜", "椅子"],
+        children_room: ["玩具", "玩具箱", "小床"], bathroom: ["镜子", "浴缸", "药柜", "洗手池"],
+        study: ["书籍", "书桌", "符号图", "台灯", "椅子"]
+    };
+    const positionList = {
+        entrance_hall: ["前门", "全家福", "小桌子", "楼梯口"], living_room: ["电视机", "壁炉", "沙发", "书房门口"],
+        kitchen: ["水槽", "冰箱", "操作台", "门厅门口"], upstairs_hall: ["主卧门", "儿童房门", "浴室门", "小柜子"],
+        master_bedroom: ["床", "梳妆台", "床头柜", "椅子"], children_room: ["玩具", "玩具箱", "小床", "走廊门口"],
+        bathroom: ["镜子", "浴缸", "药柜", "洗手池"], study: ["书籍", "书桌", "符号图", "椅子"]
+    };
+    const itemParts = { "小桌子": ["抽屉"], "梳妆台": ["抽屉"], "药柜": ["内部"], "书桌": ["抽屉"] };
+    const partDescriptions = {
+        "小桌子-抽屉": "抽屉里有一把【旧钥匙】！",
+        "梳妆台-抽屉": "抽屉里有一个精致的【吊坠盒】！",
+        "药柜-内部": "药柜里有一张照片：年轻男子和小男孩的合影。",
+        "书桌-抽屉": "抽屉上有数字密码锁，桌面上刻着「1927」。"
+    };
+
+    function getItemDesc(item) {
+        if (item === "日记" && !game.puzzles.diary_lock) return "日记紧锁，需要钥匙打开。";
+        if (item === "日记" && game.puzzles.diary_lock && !game.diaryRead) return "日记记载：仪式失败，邪灵需要家族血脉，『三音之铃，祭刃与爱坠，壁炉之火可破咒』。";
+        if (item === "玩具箱" && !game.puzzles.toybox_lock) return "上锁木箱，三个符号锁。需要【符号图】和【吊坠盒】上隐藏的纹章同时对照才能解开。";
+        if (item === "书桌" && !game.puzzles.desk_lock) return "书桌抽屉数字锁。桌面刻着1927，似乎需要某种音律之物。";
+        if (item === "符号图") return "符号图：三圣物——吊坠(爱)、摇铃(音)、祭刃(血)。必须集齐后在壁炉举行仪式。";
+        const map = { "全家福":"褪色照片，背面1927，孩子的脸像你。", "旧钥匙":"生锈钥匙，能打开日记。", "吊坠盒":"刻着'致挚爱'，内藏符文。", "摇铃":"婴儿摇铃，三颗珠子。", "菜刀":"厨房的刀，暗红痕迹。", "壁炉":"冰冷壁炉，灰烬中可举行仪式。", "梳妆台":"镜子上写着'他回来了'。" };
+        return map[item] || "没什么特别的。";
+    }
+
+    const familyTalks = {
+        father: ["西装男人低吼：你是谁？为何闯入我家？", "你看起来眼熟...仪式必须完成！", "不准提1927！这是家族的救赎。"],
+        mother: ["憔悴女人：我的小约翰...", "你见过摇铃吗？他最喜欢了。", "它知道你来了，快逃……"],
+        child: ["小男孩背对你：来陪我玩吧...", "妈妈说我生病了，但我感觉很好。", "摇铃还给我……(眼睛变黑)"]
+    };
+
+    // 辅助函数
+    function updateDayPhase() { let h=game.gameTime.hour; game.dayPhase = (h>=6&&h<10)?0:(h>=10&&h<17)?1:(h>=17&&h<21)?2:(h>=21||h<0)?3:4; }
+    function getTimeStr() { return `第${game.gameTime.day}天 ${game.gameTime.hour.toString().padStart(2,'0')}:${game.gameTime.minute.toString().padStart(2,'0')}`; }
+    function addStory(text, isEvent=false) { let area=document.getElementById("storyArea"), div=document.createElement("div"); div.className="story-line"+(isEvent?" event":""); div.innerText=text; area.appendChild(div); div.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+    function updateUI() {
+        document.getElementById("locName").innerText = locationNames[game.currentLocation];
+        document.getElementById("gameTime").innerText = getTimeStr();
+        document.getElementById("sanityNum").innerText = game.sanity;
+        document.getElementById("sanityFill").style.width = Math.max(0, game.sanity) + "%";
+        let posture = game.isSleeping?"💤 睡觉":(game.isLying?"躺着":(game.isSitting?"坐着":"站立"));
+        document.getElementById("posture").innerText = posture;
+        if(game.sanity<=25) document.getElementById("sanityNum").classList.add("low-sanity");
+        else document.getElementById("sanityNum").classList.remove("low-sanity");
+        renderActionPanel();
+    }
+    function updateGameTime(minutes) {
+        if(minutes<=0) return;
+        game.gameTime.minute += minutes;
+        while(game.gameTime.minute>=60) { game.gameTime.hour++; game.gameTime.minute-=60; }
+        while(game.gameTime.hour>=24) { game.gameTime.day++; game.gameTime.hour-=24; }
+        updateDayPhase();
+        autoRecoverSanity(minutes);
+        updateUI();
+    }
+    function autoRecoverSanity(minutes) {
+        if(game.sanity>=100) return;
+        let recover = 0;
+        if(game.isSleeping) recover = Math.floor(minutes/10)*10;
+        else if(game.isLying) recover = Math.floor(minutes/10)*5;
+        else if(game.isSitting) recover = Math.floor(minutes/10)*3;
+        else recover = Math.floor(minutes/10);
+        if(game.dayPhase===3||game.dayPhase===4) recover = Math.max(1, Math.floor(recover/2));
+        if(recover>0) { game.sanity = Math.min(100, game.sanity+recover); addStory(`✨ 恢复 ${recover} 理智，当前 ${game.sanity}%`); }
+        checkSanityDeath();
+    }
+    function checkSanityDeath() { if(game.sanity<=0 && !game.gameOver && !game.gameWon) { triggerEnding("madness"); } }
+
+    // 随机遭遇家人 (只有遭遇后才可交谈)
+    function tryEncounter() {
+        if(game.gameOver || game.gameWon) return false;
+        let metAll = game.metFather && game.metMother && game.metChild;
+        if(metAll) return false;
+        let chance = (game.dayPhase===1)?14:(game.dayPhase===0||game.dayPhase===2)?9:6;
+        if(Math.floor(Math.random()*chance)===0) {
+            let possible = [];
+            if(!game.metFather) possible.push("father");
+            if(!game.metMother) possible.push("mother");
+            if(!game.metChild) possible.push("child");
+            if(possible.length===0) return false;
+            let who = possible[Math.floor(Math.random()*possible.length)];
+            let name = who==="father"?"父亲":(who==="mother"?"母亲":"孩子");
+            addStory(`⚠️ 阴风阵阵… ${name} 突然出现在你面前！`, true);
+            if(who==="father") game.metFather=true;
+            if(who==="mother") game.metMother=true;
+            if(who==="child") game.metChild=true;
+            let talkIdx = Math.min(2, (game.metFather && game.metMother && game.metChild)?2:1);
+            let msg = familyTalks[who][talkIdx] || familyTalks[who][0];
+            addStory(`"${msg}"`, true);
+            game.sanity = Math.max(0, game.sanity-12);
+            updateUI();
+            checkSanityDeath();
+            return true;
+        }
+        return false;
+    }
+
+    // 高难度谜题：玩具箱需要【符号图】+【吊坠盒】同时拥有才能解开
+    function tryUnlockToybox() {
+        if(game.puzzles.toybox_lock) return true;
+        if(game.hasSymbolChart && game.collected.locket && game.currentLocation === "children_room") {
+            game.puzzles.toybox_lock = true;
+            game.collected.rattle = true;
+            addStory("🔓 你对照符号图与吊坠盒上的符文，成功解开了玩具箱！里面有一个【摇铃】。", true);
+            return true;
+        }
+        return false;
+    }
+
+    // 书桌谜题：需要先读过日记（diaryRead）且拥有摇铃，然后输入1927 (自动判定)
+    function tryUnlockDesk() {
+        if(game.puzzles.desk_lock) return true;
+        if(game.diaryRead && game.collected.rattle && game.currentLocation === "study") {
+            game.puzzles.desk_lock = true;
+            addStory("📖 你回想起日记中的『三音之铃』，结合桌面1927，输入密码，书桌抽屉弹开！获得了仪式文献，真相完整。", true);
+            game.knowsSecret = true;
+            return true;
+        }
+        return false;
+    }
+
+    // ---------- 多结局自动判定 (无玩家选择) ----------
+    function triggerEnding(endingType) {
+        if(game.gameOver || game.gameWon) return;
+        game.gameOver = true;
+        game.gameWon = (endingType === "true_liberation" || endingType === "peaceful_sacrifice"); // 仅真结局视为胜利，其他为失败但展示结局
+        let title = "", message = "";
+        switch(endingType) {
+            case "true_liberation":
+                title = "✨ 真·破咒解脱 ✨";
+                message = "你集齐三圣物，解开了所有谜题，并以坚韧的理智完成了仪式。家人灵魂得以安息，邪灵消散，你踏出老宅，阳光驱散百年诅咒。你重获新生，但那段记忆将永远提醒你人性的脆弱与伟大。";
+                break;
+            case "corrupted_ending":
+                title = "💀 腐化容器 💀";
+                message = "虽然举行了仪式，但你的理智早已残破不堪。在最后一刻，邪灵趁虚而入，占据了你的身体。你成为了新的地缚灵，永远游荡在这栋宅邸，代替那个孩子承受诅咒。";
+                break;
+            case "failed_ritual":
+                title = "⚰️ 仪式失败 ⚰️";
+                message = "你匆忙举行仪式，却缺少了关键圣物或未解之谜。火焰失控，整个宅邸陷入永恒的黑暗。你与这座房子一同坠入诅咒深渊，再也无法醒来。";
+                break;
+            case "madness":
+                title = "🌑 理智崩溃 🌑";
+                message = "恐惧与绝望彻底击垮了你。你的意识碎裂，你开始分不清自己是活人还是鬼魂。最终，你变成了一具行尸走肉，与宅邸里的亡灵再无区别。";
+                break;
+            case "peaceful_sacrifice":
+                title = "🕯️ 牺牲救赎 🕯️";
+                message = "你怀着悲悯之心献出了吊坠盒，以自身部分灵魂为代价净化了邪灵。家人们含泪道谢，你虽然失去了部分记忆，但最终走出了老宅，开始新的生活。";
+                break;
+            default: return;
+        }
+        addStory("\n═══════════════════════════════", true);
+        addStory(title, true);
+        addStory(message, true);
+        addStory("═══════════════════════════════\n游戏结束。刷新页面可重新开始。", true);
+        renderActionPanel(); // 显示重启按钮
+    }
+
+    // 核心仪式：自动根据状态决定结局
+    function performRitual() {
+        if(game.ritualPerformed) { addStory("仪式已经举行过，结局已定。"); return; }
+        if(game.gameOver || game.gameWon) return;
+        if(game.currentLocation !== "living_room") { addStory("只有客厅的壁炉才能举行破咒仪式。"); return; }
+        
+        // 条件判定
+        let hasAll = game.collected.locket && game.collected.rattle && game.collected.kitchen_knife;
+        let puzzlesDone = game.puzzles.diary_lock && game.puzzles.toybox_lock && game.puzzles.desk_lock;
+        let metAll = game.metFather && game.metMother && game.metChild;
+        let highSanity = game.sanity >= 60;
+        let lowSanity = game.sanity < 30;
+        let hasLocket = game.collected.locket;
+        let knowsAll = game.knowsSecret;
+        
+        if(!hasAll || !puzzlesDone || !metAll || !knowsAll) {
+            // 仪式条件严重不足 -> 失败结局
+            addStory("🔥 你将仅有的物品投入壁炉，但火焰毫无反应，宅邸开始剧烈颤抖...", true);
+            triggerEnding("failed_ritual");
+            game.ritualPerformed = true;
+            return;
+        }
+        
+        // 仪式成功，但根据理智和是否献出吊坠盒分支结局
+        addStory("🔥 你将三圣物投入壁炉，火焰燃起幽蓝之光，整个宅邸震颤！仪式开始了...", true);
+        game.ritualPerformed = true;
+        
+        // 根据理智和持有物自动决定结局
+        if(highSanity && hasLocket && knowsAll) {
+            triggerEnding("true_liberation");
+        } 
+        else if(lowSanity) {
+            triggerEnding("corrupted_ending");
+        }
+        else if(!hasLocket && game.sanity >= 40) {
+            // 没有吊坠盒，但理智尚可 -> 牺牲结局
+            triggerEnding("peaceful_sacrifice");
+        }
+        else {
+            triggerEnding("corrupted_ending");
+        }
+    }
+
+    // 交互动作
+    function move(dir) { if(game.isSitting||game.isLying||game.isSleeping){addStory("需要先站起来。");return;} let next=connections[game.currentLocation]?.[dir]; if(!next){addStory("无法前往。");return;} game.currentLocation=next; game.currentPos="中央"; updateGameTime(5); addStory(`➡️ 移动到 ${locationNames[next]}。`); addStory(locationDesc[next]); tryEncounter(); tryUnlockToybox(); tryUnlockDesk(); if(!game.gameOver && !game.gameWon) renderActionPanel(); }
+    function moveToPos(posName) { if(game.isSitting||game.isLying||game.isSleeping){addStory("需要先站起来。");return;} let positions=positionList[game.currentLocation]||[]; let match=positions.find(p=>p===posName); if(!match){addStory("无法靠近。");return;} game.currentPos=match; updateGameTime(2); addStory(`🚶 走到 ${match} 旁边。`); if(match==="冰箱"){game.sanity-=3; addStory("恶臭刺鼻，理智-3"); updateUI();} if(match==="镜子"){game.sanity-=5; addStory("镜中黑影晃动，理智-5"); updateUI();} checkSanityDeath(); tryEncounter(); tryUnlockToybox(); tryUnlockDesk(); renderActionPanel(); }
+    function examineItem(item) { if(game.isSleeping){addStory("睡梦中无法查看。");return;} let roomItems=[...(locationItems[game.currentLocation]||[])]; if(game.collected.old_key) roomItems.push("旧钥匙"); if(game.collected.locket) roomItems.push("吊坠盒"); if(game.collected.rattle) roomItems.push("摇铃"); let found=roomItems.find(i=>i===item); if(!found){addStory("没有这个物品。");return;} updateGameTime(2); addStory(`🔍 查看 ${found}: ${getItemDesc(found)}`); if(found==="全家福"){game.sanity-=8; addStory("照片孩子的脸让你恐惧，理智-8"); updateUI();} if(found==="日记" && game.puzzles.diary_lock && !game.diaryRead){ game.diaryRead=true; addStory("你仔细阅读日记，了解到仪式需要三圣物：吊坠、摇铃、祭刃。", true); tryUnlockDesk(); } if(found==="符号图" && !game.hasSymbolChart){ game.hasSymbolChart=true; addStory("你记下了符号图案，结合吊坠盒可以解开玩具箱。", true); tryUnlockToybox(); } if(found==="玩具箱") tryUnlockToybox(); if(found==="书桌") tryUnlockDesk(); checkSanityDeath(); renderActionPanel(); }
+    function examinePart(item, part) { let key=item+"-"+part; if(partDescriptions[key]){ addStory(`🔧 ${partDescriptions[key]}`); if(item==="小桌子" && part==="抽屉" && !game.collected.old_key){ game.collected.old_key=true; addStory("✅ 获得旧钥匙！"); } if(item==="梳妆台" && part==="抽屉" && !game.collected.locket){ game.collected.locket=true; addStory("✅ 获得吊坠盒！"); tryUnlockToybox(); } if(item==="书桌" && part==="抽屉" && !game.puzzles.desk_lock && game.diaryRead && game.collected.rattle){ tryUnlockDesk(); } } else addStory("没有特殊发现。"); updateGameTime(2); renderActionPanel(); }
+    function takeItemAct(item) { if(game.isSleeping){addStory("先醒来。");return;} if(item==="菜刀" && locationItems[game.currentLocation].includes("菜刀") && !game.collected.kitchen_knife){ game.collected.kitchen_knife=true; addStory("你拿起了菜刀。"); updateGameTime(1); renderActionPanel(); return; } addStory("无法拿取。"); }
+    function useItemAct(item) { if(game.isSleeping){addStory("先醒来。");return;} updateGameTime(2); if(item==="旧钥匙" && game.collected.old_key && game.currentLocation==="master_bedroom" && !game.puzzles.diary_lock){ game.puzzles.diary_lock=true; addStory("🔑 钥匙打开了日记！现在可以阅读日记获取仪式线索。"); renderActionPanel(); return; } addStory("现在不能用这个物品。"); }
+    function sit() { if(game.isSleeping){addStory("睡觉中");return;} if(game.isSitting){addStory("已经坐着");return;} let has=locationItems[game.currentLocation].some(i=>["沙发","椅子","小床"].includes(i)); if(!has){addStory("没有可坐的地方");return;} game.isSitting=true; game.isLying=false; addStory("你坐下休息。"); updateGameTime(3); renderActionPanel(); }
+    function stand() { if(!game.isSitting && !game.isLying && !game.isSleeping) addStory("你已经站着。"); else { game.isSitting=false; game.isLying=false; game.isSleeping=false; addStory("你站了起来。"); updateGameTime(1); renderActionPanel(); } }
+    function lie() { if(game.isSleeping){addStory("正在睡觉");return;} if(game.isLying){addStory("已经躺着");return;} let hasBed=locationItems[game.currentLocation].some(i=>["床","小床"].includes(i)); if(!hasBed){addStory("这里没有床");return;} game.isLying=true; game.isSitting=false; addStory("你躺下休息。"); updateGameTime(3); renderActionPanel(); }
+    function sleepAct() { if(!game.isLying){addStory("需要先躺下。");return;} if(game.currentLocation!=="master_bedroom"){addStory("只有主卧的床可以安睡。");return;} let h=game.gameTime.hour; if(h>=6 && h<21){addStory("还不到睡觉时间。");return;} addStory("你沉沉睡去..."); let toMorning=(24-h)+8; let mins=toMorning*60 - game.gameTime.minute; game.isSleeping=true; updateGameTime(mins); game.isSleeping=false; game.isLying=true; addStory(`🌅 醒来，${getTimeStr()}。`); renderActionPanel(); }
+    function talkTo(person) { if(game.isSleeping){addStory("睡梦中无法交谈");return;} let target=null; if(person==="父亲") target="father"; else if(person==="母亲") target="mother"; else if(person==="孩子") target="child"; if(!target) return; if((target==="father" && !game.metFather) || (target==="mother" && !game.metMother) || (target==="child" && !game.metChild)) { addStory(`你四处张望，但没有看到${person}。或许需要再探索一下...`, true); return; } updateGameTime(5); let idx= (game.knowsSecret && target==="mother")?2: (game.metFather&&game.metMother&&game.metChild?2:1); let msg=familyTalks[target][idx%familyTalks[target].length]; addStory(`💬 与${person}交谈: "${msg}"`, true); game.sanity-=5; updateUI(); checkSanityDeath(); renderActionPanel(); }
+    function showInventory() { let items=[]; if(game.collected.old_key) items.push("旧钥匙"); if(game.collected.kitchen_knife) items.push("菜刀"); if(game.collected.locket) items.push("吊坠盒"); if(game.collected.rattle) items.push("摇铃"); if(items.length) addStory("🎒 背包: "+items.join("、")); else addStory("背包空空如也。"); }
+
+    // 动态渲染右侧按钮面板 (无最终选择)
+    function renderActionPanel() {
+        if(game.gameOver || game.gameWon) {
+            document.getElementById("actionPanel").innerHTML = `<div class="cmd-section"><div class="cmd-title">🏁 终章 🏁</div><button class="game-btn" onclick="location.reload()">🔄 重新开始</button></div>`;
+            return;
+        }
+        let curLoc = game.currentLocation;
+        let dirs = Object.keys(connections[curLoc] || {});
+        let positionsHere = positionList[curLoc] || [];
+        let itemsHere = locationItems[curLoc] || [];
+        let backpackItems = [];
+        if(game.collected.old_key) backpackItems.push("旧钥匙");
+        if(game.collected.kitchen_knife) backpackItems.push("菜刀");
+        if(game.collected.locket) backpackItems.push("吊坠盒");
+        if(game.collected.rattle) backpackItems.push("摇铃");
+        let parts = [];
+        for(let it of itemsHere) if(itemParts[it]) parts.push(it);
+        let showRitualBtn = (curLoc === "living_room" && !game.ritualPerformed && !game.gameOver);
+        let showTalkFather = game.metFather, showTalkMother = game.metMother, showTalkChild = game.metChild;
+        let html = `
+            <div class="cmd-section"><div class="cmd-title">🧭 移动方向</div><div class="button-group">${dirs.map(d=>`<button class="game-btn" data-act="move" data-val="${d}">${d}</button>`).join('') || "<span>无路</span>"}</div></div>
+            <div class="cmd-section"><div class="cmd-title">🚶 走到物体旁</div><div class="button-group">${positionsHere.map(p=>`<button class="game-btn" data-act="movepos" data-val="${p}">${p}</button>`).join('') || "<span>无可靠近</span>"}</div></div>
+            <div class="cmd-section"><div class="cmd-title">🔍 查看物品</div><div class="item-list">${itemsHere.map(i=>`<span class="item-badge" data-act="examine" data-val="${i}">${i}</span>`).join('')}</div></div>
+            <div class="cmd-section"><div class="cmd-title">🔧 检查部件</div><div class="button-group">${parts.map(p=>`<button class="game-btn" data-act="part" data-item="${p}" data-part="抽屉">查看${p}的抽屉/内部</button>`).join('')}</div></div>
+            <div class="cmd-section"><div class="cmd-title">🎒 使用物品</div><div class="item-list">${backpackItems.map(i=>`<span class="item-badge" data-act="use" data-val="${i}">使用 ${i}</span>`).join('')}</div><div class="button-group"><button class="game-btn" data-act="inv">📦 查看背包</button></div></div>
+            <div class="cmd-section"><div class="cmd-title">💬 交谈 (需已遭遇)</div><div class="button-group"><button class="game-btn" data-act="talk" data-val="父亲" ${!showTalkFather?'disabled':''}>👨 父亲</button><button class="game-btn" data-act="talk" data-val="母亲" ${!showTalkMother?'disabled':''}>👩 母亲</button><button class="game-btn" data-act="talk" data-val="孩子" ${!showTalkChild?'disabled':''}>👦 孩子</button></div></div>
+            <div class="cmd-section"><div class="cmd-title">😴 姿态</div><div class="button-group"><button class="game-btn" data-act="sit">坐下</button><button class="game-btn" data-act="stand">站起来</button><button class="game-btn" data-act="lie">躺下</button><button class="game-btn" data-act="sleep">睡觉(主卧夜)</button></div></div>
+            <div class="cmd-section"><div class="cmd-title">⚡ 破咒仪式</div><div class="button-group">${showRitualBtn?`<button class="game-btn warning" data-act="ritual">🔥 在壁炉举行仪式</button>`:'<span>仪式条件未满足或已举行</span>'}</div></div>
+            <div class="cmd-section"><div class="cmd-title">📜 其他</div><div class="button-group"><button class="game-btn" data-act="look">环顾四周</button><button class="game-btn" data-act="take" data-val="菜刀">拿菜刀</button></div></div>
+        `;
+        document.getElementById("actionPanel").innerHTML = html;
+        document.querySelectorAll("[data-act='move']").forEach(btn=>btn.addEventListener("click",()=>move(btn.dataset.val)));
+        document.querySelectorAll("[data-act='movepos']").forEach(btn=>btn.addEventListener("click",()=>moveToPos(btn.dataset.val)));
+        document.querySelectorAll("[data-act='examine']").forEach(btn=>btn.addEventListener("click",()=>examineItem(btn.dataset.val)));
+        document.querySelectorAll("[data-act='part']").forEach(btn=>btn.addEventListener("click",()=>examinePart(btn.dataset.item, btn.dataset.part)));
+        document.querySelectorAll("[data-act='use']").forEach(btn=>btn.addEventListener("click",()=>useItemAct(btn.dataset.val)));
+        document.querySelectorAll("[data-act='talk']").forEach(btn=>btn.addEventListener("click",()=>talkTo(btn.dataset.val)));
+        document.querySelector("[data-act='inv']")?.addEventListener("click",showInventory);
+        document.querySelector("[data-act='sit']")?.addEventListener("click",sit);
+        document.querySelector("[data-act='stand']")?.addEventListener("click",stand);
+        document.querySelector("[data-act='lie']")?.addEventListener("click",lie);
+        document.querySelector("[data-act='sleep']")?.addEventListener("click",sleepAct);
+        document.querySelector("[data-act='look']")?.addEventListener("click",()=>{ addStory(locationDesc[curLoc]); tryEncounter(); renderActionPanel(); });
+        document.querySelector("[data-act='take']")?.addEventListener("click",(e)=>takeItemAct(e.currentTarget.dataset.val));
+        document.querySelector("[data-act='ritual']")?.addEventListener("click",performRitual);
+    }
+
+    function startGame() { updateUI(); addStory(locationDesc.entrance_hall); renderActionPanel(); }
+    startGame();
+</script>
+</body>
+</html>
